@@ -1,0 +1,16 @@
+[Unit]
+Description=Command Center daemon
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# provider keys; the leading `-` keeps the unit valid when the file is absent
+EnvironmentFile=-%h/.config/command-center/env
+WorkingDirectory=%h/command-center
+ExecStart=%h/command-center/.venv/bin/ccd
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

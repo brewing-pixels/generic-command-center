@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Command Center
+GenericName=Execution cockpit
+Comment=Native Command Center cockpit
+# adjust these two paths to your checkout
+Exec=/opt/command-center/.venv/bin/cc-cockpit
+TryExec=/opt/command-center/.venv/bin/cc-cockpit
+Icon=command-center
+Terminal=false
+Categories=Development;ProjectManagement;
+Keywords=command;center;agents;runs;cockpit;
+StartupWMClass=cc-cockpit

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# A commit message is history too: the PIN leaked there once.
+exec "$(git rev-parse --show-toplevel)/.githooks/secret-scan.sh" --message "$1"

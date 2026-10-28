@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Paths and content that must never enter the history.
+exec "$(git rev-parse --show-toplevel)/.githooks/secret-scan.sh" --staged

@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en" data-theme="systemcraft-hud" data-mode="dark"
+      data-prime="amber" data-secondary="cyan" data-tertiary="lime" data-bg="sahara">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Command Center</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/assets/favicon-64.png">
+  <link rel="apple-touch-icon" href="/static/assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="/static/systemcraft.css">
+  <link rel="stylesheet" href="/static/styles.css?v=20261029d">
+</head>
+<body>
+  <div class="sy-shell app-shell">
+    <header class="sy-masthead">
+      <div class="sy-brand">
+        <span class="sy-mark" aria-hidden="true">
+          <img id="brand-mark" src="/static/assets/mark.png" alt="">
+          <script>
+            /* optional local-only mark: drop web/assets/mark.local.png (gitignored) */
+            (() => {
+              const probe = new Image();
+              probe.onload = () => {
+                const mark = document.getElementById("brand-mark");
+                if (mark) mark.src = "/static/assets/mark.local.png";
+              };
+              probe.src = "/static/assets/mark.local.png";
+            })();
+          </script>
+        </span>
+        <div>
+          <div class="sy-kicker">EXECUTION // LAYER</div>
+          <h1>COMMAND <b>CENTER</b></h1>
+        </div>
+      </div>
+      <nav id="nav" class="sy-nav" hidden aria-label="Views">
+        <button data-view="overview" class="active">Overview</button>
+        <button data-view="objectives">Objectives</button>
+        <button data-view="inquisitor">Inquisitor</button>
+        <button data-view="builder">Builder</button>
+      </nav>
+      <div class="sy-actions">
+        <span id="conn" class="badge st-parked">offline</span>
+        <button id="settings-open" class="sy-btn ghost" hidden>Settings</button>
+        <button id="logout" class="sy-btn ghost" hidden>Lock board</button>
+      </div>
+    </header>
+
+    <div id="status-strip" class="status-strip" hidden>
+      <button class="status-chip" data-status="running"><span class="dot"></span><b id="status-running">0</b> running</button>
+      <button class="status-chip" data-status="blocked"><span class="dot warn"></span><b id="status-blocked">0</b> blocked</button>
+      <span id="status-note" class="sy-meta"></span>
+    </div>
+
+    <main class="app-main">
+      <section id="login-view" class="login-view">
+        <div class="sy-card login-card">
+          <div class="sy-kicker">EXECUTION // LAYER</div>
+          <h2 class="sy-title">Unlock</h2>
+          <p class="muted">Enter the LAN PIN to open the board.</p>
+          <form id="pin-form" class="pin-form">
+            <input id="pin-input" class="sy-input" type="password" inputmode="numeric"
+                   pattern="[0-9]*" maxlength="8" placeholder="PIN" aria-label="PIN" autocomplete="off">
+            <button id="pin-save" class="sy-btn primary" type="submit">Unlock</button>
+          </form>
+          <p id="pin-msg" class="muted"></p>
+        </div>
+      </section>
+
+      <section id="view-overview" class="view" hidden>
+        <div class="page-head">
+          <div>
+            <div class="sy-label">Needs you</div>
+            <h1 class="page-title">Overview</h1>
+            <p id="overview-sub" class="page-sub"></p>
+          </div>
+        </div>
+        <div class="today-grid">
+          <section class="sy-card agenda-panel">
+            <div class="section-head">
+              <div><h2 class="sy-title">Actions</h2><span class="sy-meta">manual only</span></div>
+            </div>
+            <div id="overview-list" class="agenda-list"></div>
+            <div id="overview-empty" class="empty" hidden>
+              <p>Nothing needs you.</p>
+              <button class="sy-btn secondary" data-go="objectives">Compose today</button>
+            </div>
+          </section>
+          <aside class="rail">
+            <section class="sy-card">
+              <div class="section-head"><div><h2 class="sy-title">Today</h2><span id="overview-today-badge" class="sy-meta"></span></div></div>
+              <div id="overview-today" class="overview-today"></div>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="view-objectives" class="view" hidden>
+        <div class="page-head">
+          <div>
+            <div class="sy-label">Daily commitment</div>
+            <h1 class="page-title">Objectives</h1>
+            <p id="today-sub" class="page-sub"></p>
+          </div>
+          <div class="page-actions">
+            <button id="create-open" class="sy-btn secondary">Add</button>
+            <input id="agenda-date" class="sy-input date-input" type="date" aria-label="Agenda date">
+            <button id="today-secondary" class="sy-btn ghost" hidden></button>
+            <button id="today-primary" class="sy-btn primary">Suggest draft</button>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <div id="objective-segments" class="segmented" role="group" aria-label="Objective horizon">
+            <button data-horizon="today" class="active">Today</button>
+            <button data-horizon="week">This week</button>
+            <button data-horizon="month">This month</button>
+          </div>
+        </div>
+        <div id="objectives-today">
+        <div id="today-kpis" class="kpi-row"></div>
+        <div class="today-grid">
+          <section class="sy-card agenda-panel">
+            <div class="section-head">
+              <div>
+                <h2 class="sy-title">Agenda</h2>
+                <span id="agenda-state" class="sy-meta"></span>
+              </div>
+              <button id="agenda-save" class="sy-btn secondary" disabled>Save</button>
+            </div>
+            <div id="agenda-list" class="agenda-list"></div>
+            <div id="agenda-empty" class="empty" hidden>
+              <p>No agenda for this day.</p>
+              <button id="empty-suggest" class="sy-btn primary">Suggest a draft</button>
+            </div>
+          </section>
+          <aside class="rail">
+            <section class="sy-card focus-panel">
+              <div class="section-head">
+                <div><h2 class="sy-title">Focus</h2><span class="sy-meta">max three</span></div>
+                <button id="focus-edit" class="sy-btn ghost">Edit</button>
+              </div>
+              <div id="focus-slots" class="focus-slots"></div>
+            </section>
+            <section class="sy-card add-panel">
+              <div class="section-head"><h2 class="sy-title">Add</h2></div>
+              <p class="muted">Pick a project, objective or task for this day, or create something new.</p>
+              <button id="add-task" class="sy-btn secondary">Open the picker</button>
+            </section>
+          </aside>
+        </div>
+        </div>
+        <div id="objectives-other" class="empty" hidden>
+          <p>Week and month rollups land here next.</p>
+        </div>
+      </section>
+
+      <section id="view-builder" class="view" hidden>
+        <div class="page-head">
+          <div>
+            <div class="sy-label">Today</div>
+            <h1 class="page-title">Builder</h1>
+            <p id="builder-sub" class="page-sub"></p>
+          </div>
+        </div>
+
+        <section id="builder-session" class="sy-card builder-session" hidden>
+          <div id="builder-vitals" class="shape-vitals"></div>
+          <div id="builder-tabs" class="artifact-tabs"></div>
+          <div id="builder-stream" class="builder-stream" aria-live="polite"></div>
+          <pre id="builder-artifact" class="pre builder-artifact" hidden></pre>
+          <div class="builder-actions">
+            <button id="builder-follow" class="sy-btn ghost" type="button">Follow on</button>
+            <button id="builder-work" class="sy-btn ghost" type="button">Open work item</button>
+            <button id="builder-cancel" class="sy-btn ghost" type="button">Cancel</button>
+          </div>
+        </section>
+
+        <section id="builder-process-card" class="sy-card" hidden>
+          <div class="section-head">
+            <div><h2 class="sy-title">Process</h2><span id="builder-process-meta" class="sy-meta"></span></div>
+          </div>
+          <div class="dg-wrap"><div id="builder-process"></div></div>
+        </section>
+
+        <section id="builder-decomposition" class="sy-card" hidden>
+          <div class="section-head">
+            <div><h2 class="sy-title">Decomposition</h2><span id="builder-decomp-meta" class="sy-meta"></span></div>
+            <div class="section-head-actions">
+              <span id="builder-build-note" class="sy-meta"></span>
+              <button id="builder-build" class="sy-btn primary" type="button" hidden>Build project</button>
+            </div>
+          </div>
+          <div id="builder-decomp" class="decomp-board"></div>
+        </section>
+
+        <section id="builder-spec" class="sy-card" hidden>
+          <div class="section-head">
+            <div><h2 class="sy-title">Spec</h2><span id="builder-spec-meta" class="sy-meta"></span></div>
+          </div>
+          <div id="builder-spec-tabs" class="spec-tabs" role="tablist"></div>
+          <div id="builder-spec-body" class="spec-body"></div>
+        </section>
+
+        <div id="builder-empty" class="empty" hidden>
+          <p>Nothing to build today.</p>
+          <button class="sy-btn secondary" data-go="objectives">Compose today</button>
+        </div>
+      </section>
+
+      <section id="view-inquisitor" class="view" hidden>
+        <div class="page-head">
+          <div>
+            <div class="sy-label">Spec debt</div>
+            <h1 class="page-title">Inquisitor</h1>
+            <p id="inq-sub" class="page-sub"></p>
+          </div>
+        </div>
+        <section class="sy-card agenda-panel">
+          <div class="section-head">
+            <div><h2 class="sy-title">Needs revising</h2><span class="sy-meta">today first</span></div>
+          </div>
+          <div id="inq-list" class="agenda-list"></div>
+          <div id="inq-empty" class="empty" hidden>
+            <p>No spec debt for today.</p>
+          </div>
+        </section>
+      </section>
+
+      <section id="view-shape" class="view shape-page" hidden>
+        <div class="page-head work-page-head">
+          <div class="work-head-main">
+            <div class="sy-label">Inquisitor / shape</div>
+            <h1 id="shape-title" class="page-title work-page-title">Shape</h1>
+            <div id="shape-meta" class="work-meta"></div>
+          </div>
+          <div class="page-actions work-page-actions">
+            <div class="work-model-pick inline">
+              <span class="sy-label">Inquisitor</span>
+              <div id="shape-model-picker" class="work-models" role="radiogroup" aria-label="Inquisitor model"></div>
+            </div>
+            <button id="shape-refresh" class="sy-btn ghost">Refresh</button>
+            <button id="shape-diff-btn" class="sy-btn ghost">View diff</button>
+          </div>
+        </div>
+        <div id="shape-error" class="work-error" role="alert" hidden></div>
+        <section id="shape-session" class="sy-card shape-session" hidden>
+          <div id="shape-vitals" class="shape-vitals"></div>
+          <div id="shape-chat" class="shape-chat" aria-live="polite"></div>
+          <div class="shape-composer">
+            <div id="shape-mode" class="segmented" role="group" aria-label="Message mode">
+              <button type="button" data-shape-mode="discuss" class="active">Discuss</button>
+              <button type="button" data-shape-mode="revise">Revise</button>
+            </div>
+            <textarea id="shape-prompt" class="sy-input" rows="3"
+              placeholder="Ask about a question, or instruct a revision…"
+              aria-label="Message the inquisitor"></textarea>
+            <button id="shape-send" class="sy-btn primary" type="button">Send</button>
+          </div>
+        </section>
+        <div id="shape-divider" class="shape-divider" hidden>
+          <span class="shape-divider-line"></span>
+          <span>Revision</span>
+          <span class="shape-divider-line"></span>
+          <div class="shape-divider-actions">
+            <button id="shape-check" class="sy-btn secondary">Check</button>
+            <button id="shape-cancel" class="sy-btn primary">Cancel</button>
+            <button id="shape-approve" class="sy-btn tertiary" disabled>Approve</button>
+          </div>
+        </div>
+        <div class="shape-revision">
+          <aside class="shape-rail"><div id="shape-body"></div></aside>
+          <div class="shape-main">
+            <section id="shape-tree-card" class="sy-card work-tree-card" hidden>
+              <div class="section-head">
+                <div><h2 class="sy-title">Decomposition</h2><span id="shape-tree-meta" class="sy-meta"></span></div>
+                <div class="section-head-actions">
+                  <button id="shape-tree-expand" class="sy-btn ghost icon-btn" type="button"
+                    title="fill the screen with the decomposition"
+                    aria-label="Expand the decomposition" aria-pressed="false">
+                    <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    <svg class="icon-minimise" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                      <polyline points="4 14 10 14 10 20"></polyline>
+                      <polyline points="20 10 14 10 14 4"></polyline>
+                      <line x1="14" y1="10" x2="21" y2="3"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="dg-wrap"><div id="shape-tree"></div></div>
+              <div id="shape-tree-editor" class="dg-editor" hidden></div>
+            </section>
+            <section id="shape-spec-card" class="sy-card spec-card" hidden>
+              <div class="section-head">
+                <div><h2 class="sy-title">Spec</h2><span id="shape-spec-meta" class="sy-meta"></span></div>
+                <div class="section-head-actions">
+                  <button id="shape-spec-generate" class="sy-btn primary" type="button" hidden>Extrapolate</button>
+                  <button id="shape-spec-expand" class="sy-btn ghost icon-btn" type="button"
+                    title="fill the screen with the spec"
+                    aria-label="Expand the spec" aria-pressed="false">
+                    <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    <svg class="icon-minimise" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                      <polyline points="4 14 10 14 10 20"></polyline>
+                      <polyline points="20 10 14 10 14 4"></polyline>
+                      <line x1="14" y1="10" x2="21" y2="3"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div id="shape-spec-tabs" class="spec-tabs" role="tablist"></div>
+              <div id="shape-spec-body" class="spec-body"></div>
+              <div id="shape-use-editor" class="dg-editor" hidden></div>
+            </section>
+            <pre id="shape-diff" class="pre" hidden></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-settings" class="view" hidden>
+        <div class="page-head">
+          <div>
+            <div class="sy-label">Defaults</div>
+            <h1 class="page-title">Settings</h1>
+            <p id="settings-sub" class="page-sub"></p>
+          </div>
+          <div class="page-actions">
+            <button id="settings-back" class="sy-btn ghost">Back</button>
+            <button id="settings-save" class="sy-btn primary">Save roles</button>
+          </div>
+        </div>
+        <section class="sy-card">
+          <div class="section-head">
+            <div><h2 class="sy-title">Model roles</h2><span class="sy-meta">defaults for new work</span></div>
+          </div>
+          <div id="settings-roles" class="settings-grid"></div>
+          <p class="muted">A shape or a run keeps the model it was given; changing a role only affects what starts next.</p>
+        </section>
+        <section class="sy-card">
+          <div class="section-head">
+            <div><h2 class="sy-title">Models</h2><span class="sy-meta">window and availability</span></div>
+          </div>
+          <div id="settings-models" class="settings-models"></div>
+        </section>
+      </section>
+
+      <section id="view-work" class="view work-page" hidden>
+        <div class="page-head work-page-head">
+          <div class="work-head-main">
+            <div class="sy-label">Agenda / work item</div>
+            <h1 id="work-title" class="page-title work-page-title">Work</h1>
+            <div id="work-meta" class="work-meta"></div>
+          </div>
+          <div class="page-actions work-page-actions">
+            <div class="work-model-pick inline">
+              <span class="sy-label">Build</span>
+              <div id="work-model-picker" class="work-models" role="radiogroup" aria-label="Build model"></div>
+              <span id="work-model-note" class="sy-meta"></span>
+            </div>
+            <div class="work-model-pick inline">
+              <span class="sy-label">Reviewer</span>
+              <div id="work-reviewer-picker" class="work-models" role="radiogroup" aria-label="Reviewer model"></div>
+            </div>
+            <button id="work-back" class="sy-btn ghost">Back to Today</button>
+          </div>
+        </div>
+        <div id="work-stages" class="work-stages"></div>
+        <div id="work-error" class="work-error" role="alert" hidden></div>
+        <div class="work-page-grid">
+          <section id="work-shape" class="sy-card work-section work-shape-section"></section>
+          <aside class="work-side">
+            <section id="work-build" class="sy-card work-section"></section>
+            <section id="work-review" class="sy-card work-section"></section>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="focus-dialog" class="sheet" aria-labelledby="focus-dialog-title">
+    <div class="sheet-head">
+      <div><div class="sy-label">Daily commitment</div><h2 id="focus-dialog-title" class="sy-title">Focus</h2></div>
+      <button class="sy-btn ghost" data-close="focus-dialog">Close</button>
+    </div>
+    <p class="muted">Choose up to three projects. Order is the position.</p>
+    <input id="focus-search" class="sy-input" type="search" placeholder="Search projects" aria-label="Search projects" autocomplete="off">
+    <div id="focus-options" class="focus-options"></div>
+    <div class="sheet-actions">
+      <span id="focus-count" class="sy-meta">0/3</span>
+      <button id="focus-save" class="sy-btn primary">Save focus</button>
+    </div>
+  </dialog>
+
+  <dialog id="create-dialog" class="sheet" aria-labelledby="create-title">
+    <div class="sheet-head">
+      <div><div class="sy-label">TaskStore</div><h2 id="create-title" class="sy-title">Add</h2></div>
+      <button class="sy-btn ghost" data-close="create-dialog">Close</button>
+    </div>
+
+    <div class="create-new">
+      <label class="sy-field"><span>New project</span>
+        <input id="create-project-name" class="sy-input" placeholder="Name"></label>
+      <label class="sy-field"><span>Path</span>
+        <input id="create-project-path" class="sy-input" placeholder="/path/to/project"></label>
+      <button id="create-project-save" class="sy-btn secondary">Create project</button>
+    </div>
+
+    <div class="create-tree-head">
+      <span>Projects · objectives · tasks</span>
+      <span id="create-parent-label" class="create-parent">nothing selected</span>
+    </div>
+    <input id="create-search" class="sy-input create-search" type="search"
+      placeholder="Filter projects, objectives, tasks" aria-label="Filter the tree" autocomplete="off">
+    <div id="create-tree" class="create-tree"></div>
+
+    <label class="sy-field"><span>New task</span>
+      <input id="create-task-title" class="sy-input" placeholder="What needs doing?"></label>
+    <label class="checkline"><input id="create-task-today" type="checkbox" checked> also add to this day's agenda</label>
+    <div class="sheet-actions">
+      <button id="create-task-save" class="sy-btn primary" disabled>Create task</button>
+    </div>
+  </dialog>
+
+  <dialog id="task-dialog" class="sheet" aria-labelledby="task-title">
+    <div class="sheet-head">
+      <div><div class="sy-label">Queue</div><h2 id="task-title" class="sy-title">Task</h2></div>
+      <button class="sy-btn ghost" data-close="task-dialog">Close</button>
+    </div>
+    <div id="task-meta" class="run-meta"></div>
+    <div id="task-reasons" class="reason-list"></div>
+    <div class="field-row single">
+      <div class="sy-field inline"><span>Build</span><div id="task-model-picker" class="work-models" role="radiogroup" aria-label="Build model"></div></div>
+    </div>
+    <div class="field-row single">
+      <div class="sy-field inline"><span>Reviewer</span><div id="task-reviewer-picker" class="work-models" role="radiogroup" aria-label="Reviewer model"></div></div>
+    </div>
+    <div class="sheet-actions">
+      <button id="task-run" class="sy-btn primary" disabled>Run task</button>
+    </div>
+  </dialog>
+
+  <div id="flash" class="flash" role="status" aria-live="polite" hidden></div>
+  <script src="/static/diagram.js?v=20261029d"></script>
+  <script src="/static/markdown.js?v=20261029d"></script>
+  <script src="/static/app.js?v=20261029d"></script>
+</body>
+</html>

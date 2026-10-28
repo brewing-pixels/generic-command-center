@@ -1,0 +1,41 @@
+# environment and dependencies
+.venv/
+node_modules/
+__pycache__/
+*.py[cod]
+
+# local configuration — never commit a real one
+config.yaml
+config.*.yaml
+!config.example.yaml
+*.local.*
+
+# runtime state, should state_dir ever be set relative
+state/
+worktrees/
+runs/
+shapes/
+*.sqlite3
+*.db
+
+# build and test output
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+*.log
+
+# secrets
+.env
+.env.*
+
+# local-only working memory and notes
+AGENTS.md
+.DS_Store
+
+# repository snapshots
+*.bundle
