@@ -1,0 +1,41 @@
+daemon:
+  bind: 0.0.0.0
+  port: 4190
+  pin: "0000"
+taskstore:
+  url: http://127.0.0.1:4180
+  poll_seconds: 30
+state_dir: ~/.local/state/command-center
+worktree_root: ~/.local/state/command-center/worktrees
+token_path: ~/.config/command-center/token
+opencode:
+  binary: opencode
+  agents_dir: ~/.config/opencode/agents
+  chat_server: null
+local:
+  start_script: /path/to/local-model-start.sh
+budgets:
+  max_attempts: 3
+  gate_timeout_seconds: 900
+policy:
+  max_files: 200
+  max_diff_bytes: 1000000
+
+models:
+  hosted:
+    label: Hosted model
+    model: provider/model-name
+    key_env: PROVIDER_API_KEY
+    context_window: 1000000
+  local:
+    label: Local model
+    model: local/model-name
+    health: http://127.0.0.1:8080/health
+    startable_when_free_mib: 15000
+    context_window: 262144
+
+roles:
+  inquisitor: hosted
+  coder: hosted
+  reviewer: hosted
+  chat: hosted
